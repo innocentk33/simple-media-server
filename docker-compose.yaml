@@ -1,0 +1,95 @@
+version: '3.9'
+services:
+  jellyfin:
+    image: jellyfin/jellyfin
+    container_name: jellyfin
+    restart: always
+    ports:
+      - '8096:8096'
+    volumes:
+      - ./jellyfin/config:/config
+      - ./jellyfin/cache:/cache
+      - /dev/sda1:/dev/sda1
+      - /mnt:/mnt
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=UTC
+      
+  transmission:
+    image: lscr.io/linuxserver/transmission
+    container_name: transmission
+    restart: always
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=UTC
+    ports:
+      - 9091:9091
+      - 51413:51413
+      - 51413:51413/udp      
+    volumes:
+      - ./transmission/config:/config
+      - /mnt/transmission/downloads:/downloads
+
+  sonarr:
+    image: lscr.io/linuxserver/sonarr
+    container_name: sonarr
+    restart: always
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=UTC
+    ports:
+      - 8989:8989      
+    volumes:
+      - ./sonarr/config:/config
+      - /mnt/transmission/downloads:/downloads
+      - /mnt/series:/tv/series
+      - /mnt:/mnt
+
+  radarr:
+    image: lscr.io/linuxserver/radarr
+    container_name: radarr
+    restart: always
+    environment:
+      - TZ=UTC
+      - PUID=0
+      - PGID=0
+    ports:
+      - 7878:7878
+    volumes:
+      - ./radarr/config:/config
+      - /mnt/transmission/downloads:/downloads
+      - /mnt/movies:/movies
+      - /mnt:/mnt
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr
+    container_name: prowlarr
+    restart: always
+    ports:
+      - 9696:9696
+    environment:
+      - TZ=UTC
+      - PUID=0
+      - PGID=0
+    volumes:
+      - ./prowlarr/config:/config
+  
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=UTC
+      - PORT=5055 #optional
+    ports:
+      - 5055:5055
+    volumes:
+      - ./jellyseerr/config:/app/config
+    restart: unless-stopped
+
+networks:
+  default:
+    name: kirito-net
